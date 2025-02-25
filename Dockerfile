@@ -5,8 +5,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
 
 RUN apt-get update \
-    && apt-get install -y --force-yes --no-install-recommends qemu-kvm \
-        supervisor qemu-utils wget bridge-utils dnsmasq\
+    && apt-get install -y --force-yes --no-install-recommends qemu-system-x86 \
+        supervisor qemu-utils wget bridge-utils dnsmasq \
     && apt-get autoclean \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
