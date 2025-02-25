@@ -4,13 +4,6 @@ set -e
 
 [ -n "$DEBUG" ] && set -x
 
-# Create the kvm node (required --privileged)
-if [ ! -e /dev/kvm ]; then
-   set +e
-   mknod /dev/kvm c 10 $(grep '\<kvm\>' /proc/misc | cut -f 1 -d' ')   
-   set -e
-fi
-
 # If we were given arguments, override the default configuration
 if [ $# -gt 0 ]; then
    exec "$@"
@@ -72,15 +65,6 @@ if [ -z "$NETWORK" ] || [ "$NETWORK" == "bridge" ]; then
     dnsmasq --dhcp-range ${dhcp_prefix}.2,${dhcp_prefix}.254
 elif [ "$NETWORK" == "tap" ]; then
     echo "allow $NETWORK_BRIDGE_IF" >/etc/qemu/bridge.conf
-
-    # Make sure we have the tun device node
-    if [ ! -e /dev/net/tun ]; then
-       set +e
-       mkdir -p /dev/net
-       mknod /dev/net/tun c 10 $(grep '\<tun\>' /proc/misc | cut -f 1 -d' ')
-       set -e
-    fi
-
     FLAGS_NETWORK="-netdev bridge,br=${NETWORK_BRIDGE_IF},id=net0 -device virtio-net,netdev=net0"
 else
     FLAGS_NETWORK="-netdev tap,id=net0,script=/var/qemu-ifup -device virtio-net,netdev=net0"
@@ -100,7 +84,7 @@ echo "parameter: ${FLAGS_REMOTE_ACCESS}"
 # Execute with default settings
 /noVNC/utils/launch.sh --listen 6080 &
 set -x
-exec /usr/bin/kvm ${FLAGS_REMOTE_ACCESS} \
+exec qemu-system-x86_64 ${FLAGS_REMOTE_ACCESS} \
    -k en-us -m ${VM_RAM} -cpu qemu64 \
    ${FLAGS_NETWORK} \
    ${FLAGS_ISO} \
