@@ -33,13 +33,13 @@ if [ -n "$ISO" ]; then
     if [ "${ISO:0:1}" != "/" ]; then
         basename=$(basename $ISO)
         if [ ! -f "/data/${basename}" ] || [ "$ISO_FORCE_DOWNLOAD" != "0" ]; then
-            wget -O- "$ISO" > /data/${basename}
+            wget --no-check-certificate -O /data/${basename} "$ISO"
         fi
         ISO=/data/${basename}
     fi
     FLAGS_ISO="-cdrom $ISO"
     if [ ! -f "$ISO" ]; then
-        echo "ISO fild not found: $ISO"
+        echo "ISO file not found: $ISO"
         exit 1
     fi
 fi
@@ -58,9 +58,9 @@ echo "[network]"
 # If we have a NETWORK_BRIDGE_IF set, add it to /etc/qemu/bridge.conf
 if [ -z "$NETWORK" ] || [ "$NETWORK" == "bridge" ]; then
     echo "allow br0" >/etc/qemu/bridge.conf
-    ipaddr_cidr=$(ip a s eth0|awk '$1 == "inet" {print $2}')
+    ipaddr_cidr=$(ip a s eth0 | awk '$1 == "inet" {print $2}')
     ipaddr=${ipaddr_cidr%/*}
-    defaultgw=$(ip r | awk '$1 == "default" {print $3}')
+    defaultgw=$(ip r | awk '$1 == "default" {print $3}")
     dhcp_prefix=${ipaddr_cidr%.*}
     brctl addbr br0
     brctl addif br0 eth0
@@ -96,7 +96,6 @@ elif [ "$REMOTE_ACCESS" == "vnc" ]; then
     FLAGS_REMOTE_ACCESS="-vnc :0"
 fi
 echo "parameter: ${FLAGS_REMOTE_ACCESS}"
-
 
 # Execute with default settings
 /noVNC/utils/launch.sh --listen 6080 &
